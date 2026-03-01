@@ -1,0 +1,407 @@
+// ===================================================================
+// Mail Filter Engine v2 — Advanced NL Filtering via LOCAL DeepSeek R1 8B
+//
+// Two-pass architecture:
+//   Pass 1 (Intent Extraction): Parses raw messy NL into structured intent
+//   Pass 2 (Classification):    Classifies each mail against parsed intent
+//
+// Routes through LLMEngine CEO (DeepSeek R1 8B) on user's GPU.
+// NO API LIMITS — handles raw, messy, huge NL instructions effortlessly.
+// ===================================================================
+
+import { LLMEngine, extractJson, type ChatMode } from "@/lib/ai/llm-engine";
+
+/**
+ * Pick the fastest available engine for interactive filter operations.
+ * Filter is user-facing & latency-sensitive — route to cloud when possible
+ * so it never competes with the local Ollama summariser for GPU time.
+ */
+function pickFilterMode(): ChatMode {
+    const engine = LLMEngine.getInstance();
+    // Groq Alpha (8B instant) — ideal for fast classification
+    if (engine.isGroqAlphaReady()) return "groq-alpha";
+    // Groq Beta (70B) — slower but still cloud, no local contention
+    if (engine.isGroqBetaReady()) return "groq-beta";
+    // Last resort: local Ollama (may contend with summariser)
+    return "local";
+}
+
+// ─── Local Pre-Screen ───
+
+type MailInput = { uid: number; from: string; subject: string; snippet: string };
+
+/**
+ * Quick local keyword check — eliminates mails that have ZERO overlap
+ * with the intent's topics/keywords. This avoids wasting LLM calls on
+ * obviously irrelevant mails (e.g. "AMD Slingshot" for a LinkedIn query).
+ *
+ * Mails that survive this pass are sent to the LLM for precise classification.
+ * The threshold is intentionally LOW — we only eliminate mails that have
+ * absolutely no keyword overlap.
+ */
+function localPreScreen(
+    mails: MailInput[],
+    intent: FilterIntent,
+    rawPrompt: string,
+): MailInput[] {
+    // Build keyword set from intent + raw prompt
+    const allKeywords: string[] = [
+        ...intent.topics,
+        ...intent.includeKeywords,
+        // Also extract significant words from the parsed query itself
+        ...intent.parsedQuery
+            .toLowerCase()
+            .split(/\s+/)
+            .filter(w => w.length > 3 && !STOP_WORDS.has(w)),
+    ].map(k => k.toLowerCase());
+
+    if (allKeywords.length === 0) {
+        // No keywords to screen against — pass everything to LLM
+        return mails;
+    }
+
+    // Also gather exclude keywords for immediate rejection
+    const excludeKws = intent.excludeKeywords.map(k => k.toLowerCase());
+
+    return mails.filter(m => {
+        const text = `${m.from} ${m.subject} ${m.snippet}`.toLowerCase();
+
+        // If mail strongly matches an exclude keyword, eliminate it
+        if (excludeKws.some(ek => text.includes(ek))) return false;
+
+        // Check if at least ONE keyword appears in the mail's text
+        // Use substring matching for multi-word keywords and word-level for short ones
+        const hasOverlap = allKeywords.some(kw => {
+            if (kw.includes(" ")) {
+                // Multi-word: check if BOTH words appear (not necessarily adjacent)
+                const words = kw.split(" ").filter(w => w.length > 2);
+                return words.every(w => text.includes(w));
+            }
+            return text.includes(kw);
+        });
+
+        return hasOverlap;
+    });
+}
+
+/** Common English stop words to skip during keyword extraction */
+const STOP_WORDS = new Set([
+    "the", "this", "that", "with", "from", "about", "have", "been",
+    "were", "they", "their", "them", "what", "when", "where", "which",
+    "will", "would", "could", "should", "there", "here", "some", "more",
+    "also", "just", "like", "only", "very", "much", "many", "such",
+    "than", "then", "into", "over", "your", "each", "make", "show",
+    "find", "mails", "emails", "mail", "email", "regarding", "related",
+    "any", "all", "does", "didn", "don", "isn",
+]);
+
+// ─── Types ───
+
+export interface FilterIntent {
+    /** Cleaned, structured version of what the user wants */
+    parsedQuery: string;
+    /** Key topics/themes extracted */
+    topics: string[];
+    /** Any sender hints (names, domains, org types) */
+    senderHints: string[];
+    /** Implied time constraints */
+    timeHint: string | null;
+    /** Priority/urgency bias */
+    urgencyBias: "any" | "urgent-only" | "non-urgent" | null;
+    /** Include/exclude signals */
+    includeKeywords: string[];
+    excludeKeywords: string[];
+    /** Confidence in parsing (0-1) */
+    parseConfidence: number;
+}
+
+export interface FilterResult {
+    uid: number;
+    relevant: boolean;
+    reason: string;
+    confidence: number;
+    /** Matched topics from the intent */
+    matchedTopics: string[];
+}
+
+// ─── Constants ───
+
+/** Minimum confidence for a mail to be considered relevant */
+const CONFIDENCE_FLOOR = 0.65;
+
+// ─── Pass 1: Intent Extraction ───
+
+async function extractFilterIntent(
+    engine: LLMEngine,
+    rawPrompt: string
+): Promise<FilterIntent> {
+    const systemPrompt = `You are a precision natural language understanding engine for an email search system.
+
+Your task: Parse a raw, potentially messy human query into a TIGHT, SPECIFIC structured filter intent.
+
+The user might type anything — slang, abbreviations, run-on sentences, typos. You must extract the EXACT SPECIFIC INTENT — do NOT broaden it.
+
+Examples of messy inputs and CORRECT parsing:
+- "show me stuff about scholarships or any money related things idk maybe from the university admin"
+  → topics: ["scholarships", "financial aid", "stipends", "grants", "tuition fees"]
+  → includeKeywords: ["scholarship", "funding", "grant", "stipend", "financial"]
+- "any mails regarding linkedin connection requests ?"
+  → topics: ["LinkedIn connection requests", "networking invitations"]
+  → includeKeywords: ["connect", "connection request", "invitation to connect", "join my network"]
+  → NOTE: "LinkedIn profile views" or "LinkedIn job alerts" are NOT connection requests!
+- "hmm lets see those emails about the hackathon"
+  → topics: ["hackathon", "coding competition"]
+  → includeKeywords: ["hackathon", "hack", "coding competition", "code sprint"]
+  → NOTE: Generic university emails or deadline emails are NOT about hackathons!
+
+OUTPUT FORMAT — respond with ONLY a valid JSON object:
+{
+  "parsedQuery": "Clean, precise version of what they want (1-2 sentences)",
+  "topics": ["topic1", "topic2"],
+  "senderHints": ["professor", "admin@university.edu"],
+  "timeHint": "this week" or null,
+  "urgencyBias": "any" | "urgent-only" | "non-urgent" | null,
+  "includeKeywords": ["scholarship", "funding", "grant"],
+  "excludeKeywords": ["newsletter", "marketing"],
+  "parseConfidence": 0.85
+}
+
+RULES:
+- topics: Extract 1-5 SPECIFIC topics — keep them narrow and directly related. Do NOT pad with loosely associated topics.
+- senderHints: Names, email patterns, org types ("university", "professor", "company")
+- timeHint: Any implied recency/time constraints, or null
+- urgencyBias: "urgent-only" if they only want urgent stuff, "non-urgent" for calm review, "any" or null for no bias
+- includeKeywords: Specific words/phrases that MUST appear for relevance — be precise!
+- excludeKeywords: Things they explicitly want to EXCLUDE
+- parseConfidence: How confident you are in understanding their intent
+- Be SPECIFIC with topics — only extract topics directly related to the query, NOT tangential associations
+
+CRITICAL: Output ONLY the JSON object. No markdown, no explanation.`;
+
+    try {
+        const filterMode = pickFilterMode();
+        console.log(`[FILTER] Pass 1 (Intent) → ${filterMode}`);
+
+        const raw = await engine.chat(
+            [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: `Parse this student's email filter request:\n\n"${rawPrompt}"` },
+            ],
+            {
+                mode: filterMode,
+                temperature: 0.1,
+                max_tokens: 1024,
+                json_mode: true,
+            }
+        );
+
+        const parsed = extractJson<FilterIntent>(raw);
+        return {
+            parsedQuery: parsed.parsedQuery || rawPrompt,
+            topics: Array.isArray(parsed.topics) ? parsed.topics : [],
+            senderHints: Array.isArray(parsed.senderHints) ? parsed.senderHints : [],
+            timeHint: parsed.timeHint || null,
+            urgencyBias: parsed.urgencyBias || null,
+            includeKeywords: Array.isArray(parsed.includeKeywords) ? parsed.includeKeywords : [],
+            excludeKeywords: Array.isArray(parsed.excludeKeywords) ? parsed.excludeKeywords : [],
+            parseConfidence: typeof parsed.parseConfidence === "number" ? parsed.parseConfidence : 0.5,
+        };
+    } catch (err) {
+        console.error("[FILTER INTENT] Parse failed, using raw prompt:", err);
+        return {
+            parsedQuery: rawPrompt,
+            topics: [],
+            senderHints: [],
+            timeHint: null,
+            urgencyBias: null,
+            includeKeywords: rawPrompt.split(/\s+/).filter(w => w.length > 3),
+            excludeKeywords: [],
+            parseConfidence: 0.3,
+        };
+    }
+}
+
+// ─── Pass 2: Classification ───
+
+async function classifyBatch(
+    engine: LLMEngine,
+    batch: { uid: number; from: string; subject: string; snippet: string }[],
+    intent: FilterIntent,
+    rawPrompt: string,
+): Promise<FilterResult[]> {
+    const mailList = batch.map((m, i) => (
+        `[${i}] UID:${m.uid}\n    FROM: ${m.from}\n    SUBJECT: ${m.subject}\n    SNIPPET: ${m.snippet.substring(0, 300)}`
+    )).join("\n\n");
+
+    const intentBlock = `PARSED INTENT:
+- Query: ${intent.parsedQuery}
+- Topics: ${intent.topics.join(", ") || "none specified"}
+- Sender hints: ${intent.senderHints.join(", ") || "any"}
+- Time constraint: ${intent.timeHint || "none"}
+- Urgency bias: ${intent.urgencyBias || "any"}
+- Must include: ${intent.includeKeywords.join(", ") || "none"}
+- Must exclude: ${intent.excludeKeywords.join(", ") || "none"}`;
+
+    const systemPrompt = `You are a STRICT precision email classification engine.
+
+TASK: Given the user's filter intent and a list of emails, classify each email as relevant ONLY IF it DIRECTLY matches the user's query. Be strict — false positives are worse than false negatives.
+
+${intentBlock}
+
+CLASSIFICATION RULES:
+1. STRICT MATCHING: An email is relevant ONLY if its CONTENT directly relates to the specific topics requested. Sharing a sender domain or having a vaguely similar theme is NOT enough.
+   - Example: If query is "LinkedIn connection requests", an email about "LinkedIn profile views" is IRRELEVANT — it's from LinkedIn but NOT about connection requests.
+   - Example: If query is "hackathon emails", an email about "AMD Slingshot submission deadline" is IRRELEVANT even though both involve deadlines.
+2. SEMANTIC MATCHING — but NARROW:
+   - Match on the SPECIFIC concept, not the broad category
+   - "connection request" matches: "wants to connect", "invitation to connect", "join network", "accept connection" — but NOT "profile views", "job alerts", "endorsements"
+   - "scholarship" matches: funding, grant, stipend, financial aid — but NOT generic university announcements
+3. EXCLUDE FILTERING: If the email matches an exclude keyword, mark irrelevant
+4. SENDER MATCHING: Sender domain alone is NOT sufficient for relevance — the email content must also match the topic
+5. URGENCY: If urgencyBias is "urgent-only", only mark emails with clear urgency/deadlines as relevant
+6. CONFIDENCE: Give LOW confidence (0.3-0.5) if the match is tenuous. Give HIGH confidence (0.8-1.0) only for direct, clear matches.
+7. matchedTopics: List which specific topics this email actually matches — leave empty [] if none match directly
+8. DEFAULT TO IRRELEVANT: When in doubt, mark as irrelevant with low confidence. It is better to miss a borderline email than to include a clearly unrelated one.
+
+OUTPUT FORMAT — respond with ONLY a valid JSON array:
+[
+  { "index": 0, "relevant": true, "reason": "Concise reason", "confidence": 0.92, "matchedTopics": ["topic1"] }
+]
+
+CRITICAL: Output ONLY the JSON array. No markdown, no explanation, no preamble.`;
+
+    const userPrompt = `ORIGINAL STUDENT REQUEST: "${rawPrompt}"
+
+EMAILS TO CLASSIFY:
+${mailList}
+
+Classify each email against the parsed intent. JSON array only:`;
+
+    try {
+        const filterMode = pickFilterMode();
+        console.log(`[FILTER] Pass 2 (Classify batch of ${batch.length}) → ${filterMode}`);
+
+        const raw = await engine.chat(
+            [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt },
+            ],
+            {
+                mode: filterMode,
+                temperature: 0.12,
+                max_tokens: 2048,
+                json_mode: true,
+            }
+        );
+
+        const parsed = extractJson<{
+            index: number; relevant: boolean; reason: string;
+            confidence: number; matchedTopics?: string[];
+        }[]>(raw);
+
+        return batch.map((m, i) => {
+            const match = parsed.find(p => p.index === i);
+            // Apply confidence floor — low-confidence matches are treated as irrelevant
+            const rawRelevant = match?.relevant ?? false;
+            const confidence = match?.confidence ?? 0;
+            const meetsThreshold = confidence >= CONFIDENCE_FLOOR;
+            return {
+                uid: m.uid,
+                relevant: rawRelevant && meetsThreshold,
+                reason: match?.reason ?? "Unclassified",
+                confidence,
+                matchedTopics: match?.matchedTopics ?? [],
+            };
+        });
+    } catch (err) {
+        console.error("[MAIL FILTER] Classification error:", err);
+        // On error, mark as irrelevant — safer than false positives
+        return batch.map(m => ({
+            uid: m.uid,
+            relevant: false,
+            reason: "Classification error — excluded for safety",
+            confidence: 0,
+            matchedTopics: [],
+        }));
+    }
+}
+
+// ─── Public API ───
+
+/**
+ * Advanced NL mail filter using two-pass architecture:
+ * 1. Intent extraction: Parses messy NL into structured intent
+ * 2. Classification: Classifies each mail against intent
+ *
+ * Runs entirely on local DeepSeek R1 8B via Ollama (GPU). No API limits.
+ */
+export async function classifyMailsWithNL(
+    mails: { uid: number; from: string; subject: string; snippet: string }[],
+    nlPrompt: string,
+    onProgress?: (done: number, total: number, partialResults: FilterResult[]) => void,
+    onIntentParsed?: (intent: FilterIntent) => void,
+): Promise<{ results: FilterResult[]; intent: FilterIntent }> {
+    if (!nlPrompt.trim() || mails.length === 0) {
+        return { results: [], intent: emptyIntent() };
+    }
+
+    const engine = LLMEngine.getInstance();
+
+    // ── Pass 1: Extract intent from raw NL ──
+    const intent = await extractFilterIntent(engine, nlPrompt);
+    onIntentParsed?.(intent);
+
+    // ── Pre-screen: Quick local keyword filter to eliminate obvious non-matches ──
+    const candidates = localPreScreen(mails, intent, nlPrompt);
+    const skipped = mails.filter(m => !candidates.find(c => c.uid === m.uid));
+    console.log(`[FILTER] Pre-screen: ${candidates.length}/${mails.length} candidates, ${skipped.length} eliminated locally`);
+
+    // Build results — skipped mails are immediately marked irrelevant
+    const results: FilterResult[] = skipped.map(m => ({
+        uid: m.uid,
+        relevant: false,
+        reason: "Eliminated by local keyword pre-screen",
+        confidence: 0,
+        matchedTopics: [],
+    }));
+
+    // ── Pass 2: Classify remaining candidates via LLM ──
+    const batchSize = 6; // Smaller batches for precision focus
+    const filterMode = pickFilterMode();
+    const isCloud = filterMode !== "local";
+    const concurrency = isCloud ? 3 : 1; // Parallel batches on cloud APIs
+
+    const batches: typeof candidates[] = [];
+    for (let i = 0; i < candidates.length; i += batchSize) {
+        batches.push(candidates.slice(i, i + batchSize));
+    }
+
+    // Process batches — parallel if cloud, sequential if local
+    for (let i = 0; i < batches.length; i += concurrency) {
+        const chunk = batches.slice(i, i + concurrency);
+        const batchPromises = chunk.map(batch =>
+            classifyBatch(engine, batch, intent, nlPrompt)
+        );
+        const chunkResults = await Promise.all(batchPromises);
+        for (const batchResults of chunkResults) {
+            results.push(...batchResults);
+            const done = results.length;
+            onProgress?.(Math.min(done, mails.length), mails.length, batchResults);
+        }
+    }
+
+    return { results, intent };
+}
+
+function emptyIntent(): FilterIntent {
+    return {
+        parsedQuery: "",
+        topics: [],
+        senderHints: [],
+        timeHint: null,
+        urgencyBias: null,
+        includeKeywords: [],
+        excludeKeywords: [],
+        parseConfidence: 0,
+    };
+}

@@ -1,0 +1,49 @@
+[
+  {
+    "id": 1,
+    "text": "Complete the ML assignment by Friday",
+    "trigger_at": "2026-02-23T11:10:00.834007",
+    "priority": "high",
+    "created_at": "2026-02-23T10:58:50.676530",
+    "fired": true,
+    "snoozed": 1,
+    "time_until": "in 29m",
+    "overdue": false
+  },
+  {
+    "id": 2,
+    "text": "review the project proposal",
+    "trigger_at": "2026-02-24T10:00:00.289045",
+    "priority": "medium",
+    "created_at": "2026-02-23T10:59:37.289045",
+    "fired": true,
+    "snoozed": 0
+  },
+  {
+    "id": 3,
+    "text": "Call the doctor",
+    "trigger_at": "2025-01-20T16:00:00",
+    "priority": "low",
+    "created_at": "2026-02-23T15:16:54.033112",
+    "fired": true,
+    "snoozed": 0
+  },
+  {
+    "id": 4,
+    "text": "Call the doctor",
+    "trigger_at": "2025-01-20T16:00:00",
+    "priority": "low",
+    "created_at": "2026-02-23T16:19:01.103663",
+    "fired": true,
+    "snoozed": 0
+  },
+  {
+    "id": 5,
+    "text": "Call the doctor",
+    "trigger_at": "2025-01-20T16:00:00",
+    "priority": "low",
+    "created_at": "2026-02-23T16:56:07.968900",
+    "fired": true,
+    "snoozed": 0
+  }
+]

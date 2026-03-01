@@ -1,0 +1,394 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  --animate-grid-flow: grid-flow 2s linear infinite;
+
+  @keyframes accordion-down {
+    from {
+      height: 0
+    }
+
+    to {
+      height: var(--radix-accordion-content-height)
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height)
+    }
+
+    to {
+      height: 0
+    }
+  }
+
+  @keyframes pulse-slow {
+
+    0%,
+    100% {
+      opacity: 0.4
+    }
+
+    50% {
+      opacity: 0.1
+    }
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0)
+    }
+
+    50% {
+      transform: translateY(-10px)
+    }
+  }
+
+  /* Animation Definitions */
+  @keyframes grid-flow {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(40px);
+    }
+  }
+}
+
+/* GPU Acceleration Classes */
+.animate-grid-flow {
+  will-change: transform;
+  animation: grid-flow 2s linear infinite;
+}
+
+.particle-canvas {
+  will-change: opacity;
+}
+
+@layer base {
+  :root {
+    /* Default to Dark Mode values even in :root to force dark theme */
+    --background: 240 10% 4%;
+    /* #0a0a0f - Deep Space Black */
+    --foreground: 210 40% 98%;
+    /* #f0f4f8 */
+
+    --card: 240 10% 6%;
+    /* Slightly lighter black */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 240 10% 6%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 262 83% 58%;
+    /* Electric Purple */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 190 100% 50%;
+    /* Cyber Cyan */
+    --secondary-foreground: 240 10% 4%;
+
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 270 50% 20%;
+    /* Deep Purple Accent */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 5% 20%;
+    --input: 240 5% 20%;
+    --ring: 262 83% 58%;
+
+    --radius: 0.75rem;
+
+    --chart-1: 262 83% 58%;
+    --chart-2: 190 100% 50%;
+    --chart-3: 150 100% 45%;
+    --chart-4: 30 100% 50%;
+    --chart-5: 340 100% 60%;
+
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 240 5% 65%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 240 5% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 240 5% 20%;
+    --sidebar-ring: 262 83% 58%;
+  }
+
+  .dark {
+    /* Same as root to enforce consistency */
+    --background: 240 10% 4%;
+    --foreground: 210 40% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 190 100% 50%;
+    --secondary-foreground: 240 10% 4%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 270 50% 20%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 5% 20%;
+    --input: 240 5% 20%;
+    --ring: 262 83% 58%;
+    --chart-1: 262 83% 58%;
+    --chart-2: 190 100% 50%;
+    --chart-3: 150 100% 45%;
+    --chart-4: 30 100% 50%;
+    --chart-5: 340 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+  }
+}
+
+/* ─── Aura Design System Utilities ─── */
+
+/* Mesh Gradient Background — Bolder spread */
+.aura-bg {
+  background-color: #030014;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 50%, rgba(139, 92, 246, 0.18), transparent 50%),
+    radial-gradient(ellipse 70% 80% at 85% 30%, rgba(6, 182, 212, 0.16), transparent 50%),
+    radial-gradient(ellipse 90% 50% at 50% 90%, rgba(236, 72, 153, 0.10), transparent 50%),
+    radial-gradient(ellipse 60% 70% at 70% 60%, rgba(16, 185, 129, 0.08), transparent 40%);
+}
+
+/* Glass Card */
+.aura-card {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-lg transition-all duration-300;
+}
+
+.aura-card:hover {
+  @apply border-white/20 shadow-primary/20 bg-white/[0.07];
+}
+
+/* Neon Text */
+.text-neon-purple {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.15);
+}
+
+.text-neon-cyan {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5), 0 0 40px rgba(6, 182, 212, 0.15);
+}
+
+.text-neon-pink {
+  text-shadow: 0 0 10px rgba(236, 72, 153, 0.5), 0 0 40px rgba(236, 72, 153, 0.15);
+}
+
+/* ─── Holographic Shimmer ─── */
+@keyframes holo-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.holo-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.08) 25%,
+    rgba(6, 182, 212, 0.12) 50%,
+    rgba(236, 72, 153, 0.08) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: holo-shimmer 4s linear infinite;
+}
+
+/* ─── Glitch Text ─── */
+@keyframes glitch-skew {
+  0% { transform: skewX(0deg); }
+  20% { transform: skewX(-2deg); }
+  40% { transform: skewX(0.5deg); }
+  60% { transform: skewX(-0.5deg); }
+  80% { transform: skewX(1deg); }
+  100% { transform: skewX(0deg); }
+}
+
+.glitch-text {
+  animation: glitch-skew 8s ease-in-out infinite alternate;
+}
+
+/* ─── Neon Border Pulse ─── */
+@keyframes neon-border-pulse {
+  0%, 100% { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0 5px rgba(139, 92, 246, 0.1); }
+  50% { border-color: rgba(6, 182, 212, 0.3); box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); }
+}
+
+.neon-border-pulse {
+  animation: neon-border-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Floating Animation ─── */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(0.5deg); }
+  75% { transform: translateY(3px) rotate(-0.3deg); }
+}
+
+.animate-gentle-float {
+  animation: gentle-float 6s ease-in-out infinite;
+}
+
+/* ─── Dot Matrix Pattern ─── */
+.dot-matrix {
+  background-image: radial-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* ─── Scanline Overlay ─── */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(139, 92, 246, 0.03) 50%,
+    transparent 100%
+  );
+  height: 200%;
+  animation: scan 8s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Glow Pulse for status indicators ─── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 4px currentColor, 0 0 8px currentColor; }
+  50% { box-shadow: 0 0 8px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Rainbow border for special cards ─── */
+@keyframes rainbow-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.rainbow-border {
+  --angle: 0deg;
+  border-image: conic-gradient(from var(--angle), #8b5cf6, #06b6d4, #ec4899, #10b981, #8b5cf6) 1;
+  animation: rainbow-rotate 4s linear infinite;
+}
+
+/* ─── Shimmer for XP bar ─── */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+}
+
+/* ─── Custom cursor ─── */
+* {
+  cursor: none !important;
+}
+
+.custom-cursor {
+  pointer-events: none;
+  position: fixed;
+  z-index: 99999;
+  mix-blend-mode: difference;
+}

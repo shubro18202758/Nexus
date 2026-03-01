@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Nexus Listener</h1>
+      <div class="status-indicator" id="status-dot"></div>
+    </div>
+
+    <div class="controls">
+      <label class="switch">
+        <input type="checkbox" id="toggle-listening" checked>
+        <span class="slider round"></span>
+      </label>
+      <span id="status-text">Listening Active</span>
+    </div>
+
+    <div class="stats">
+      <p>Events Captured: <span id="event-count">0</span></p>
+    </div>
+
+    <div class="port-config">
+      <label for="api-port">API Port</label>
+      <input type="number" id="api-port" value="3000" min="1000" max="65535">
+    </div>
+
+    <div class="footer">
+      <p>Target: localhost:<span id="port-display">3000</span></p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
