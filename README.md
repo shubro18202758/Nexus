@@ -3,7 +3,7 @@
 # 🌌 NEXUS 🌌
 ### 👑 The Ultimate Aura-Farming Cognitive Engine 👑
 
-<img src="https://media1.tenor.com/m/x-W-0U1H55YAAAAC/cyberpunk-edgerunners.gif" width="600" alt="Netrunner Deep Dive" style="border-radius: 15px; border: 2px solid #a855f7; box-shadow: 0 0 25px #a855f7;">
+<img src="https://media.tenor.com/x-W-0U1H55YAAAAC/cyberpunk-edgerunners.gif" width="600" alt="Netrunner Deep Dive" style="border-radius: 15px; border: 2px solid #a855f7; box-shadow: 0 0 25px #a855f7;">
 
 <br/>
 
@@ -211,5 +211,5 @@ Want to add more aura to this repo? Feel free to fork, break things, and submit 
 MIT License. Do whatever you want, just don't steal our vibes. ✌️
 <div align="center">
 <br/>
-<img src="https://media1.tenor.com/m/D9RjN_S1l8QAAAAC/domain-expansion-infinite-void.gif" width="400" alt="Infinite Context Window" style="border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 15px #fff;">
+<img src="https://media.tenor.com/D9RjN_S1l8QAAAAC/domain-expansion-infinite-void.gif" width="400" alt="Infinite Context Window" style="border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 15px #fff;">
 </div>
