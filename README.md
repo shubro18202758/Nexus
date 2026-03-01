@@ -167,7 +167,7 @@ If you want to run this absolute unit of a codebase locally, follow these steps.
 ### 1. Clone & Install Frontend
 ```bash
 git clone https://github.com/shubro18202758/Nexus.git
-cd Nexus
+cd Nexus/frontend
 npm install
 ```
 
@@ -197,6 +197,7 @@ python main.py
 ### 4. Boot the Next.js Matrix
 Open a new terminal back in the root directory:
 ```bash
+cd frontend
 npm run dev
 ```
 
