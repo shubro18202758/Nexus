@@ -3,7 +3,7 @@
 # 🌌 NEXUS 🌌
 ### 👑 The Ultimate Aura-Farming Cognitive Engine 👑
 
-<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3kzeWhtZ2VqdzNscHUwNmlzaGZ0ZmcyamQweHAxZXk2ZWZ4MThqbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPa2TdahY8LAAxy/giphy.gif" width="600" alt="Matrix Cyber Nexus" style="border-radius: 15px; border: 2px solid #3b82f6; box-shadow: 0 0 20px #3b82f6;">
+<img src="https://media1.tenor.com/m/x-W-0U1H55YAAAAC/cyberpunk-edgerunners.gif" width="600" alt="Netrunner Deep Dive" style="border-radius: 15px; border: 2px solid #a855f7; box-shadow: 0 0 25px #a855f7;">
 
 <br/>
 
@@ -211,5 +211,5 @@ Want to add more aura to this repo? Feel free to fork, break things, and submit 
 MIT License. Do whatever you want, just don't steal our vibes. ✌️
 <div align="center">
 <br/>
-<img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZucmhlbDU3YjljeWgyem9id3F6dXZzNDlscGJ4ZnEzYmt2czV0eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Lp8kVSwaSU6V9oATDM/giphy.gif" width="300" alt="Hacking GIF">
+<img src="https://media1.tenor.com/m/D9RjN_S1l8QAAAAC/domain-expansion-infinite-void.gif" width="400" alt="Infinite Context Window" style="border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 15px #fff;">
 </div>
