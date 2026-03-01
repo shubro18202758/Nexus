@@ -69,3 +69,7 @@ server_log.txt
 neural_engine/.venv/
 __pycache__/
 *.pyc
+
+/logs/
+
+/scripts/
