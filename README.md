@@ -26,6 +26,7 @@ This isn’t just a basic to-do app SaaS wrapper. This is a **Sovereign, Edge-Fi
 </div>
 
 ---
+<img width="3199" height="1999" alt="Screenshot 2026-03-01 235026" src="https://github.com/user-attachments/assets/7b495acb-64cc-47d7-95a9-5108a7c211c8" />
 
 ## ⚡ What is NEXUS? (The TL;DR)
 
@@ -39,6 +40,7 @@ You get:
 *   **Zero missed opportunities.** Constant web-crawling for your specific goals.
 
 ---
+<img width="3199" height="1999" alt="Screenshot 2026-03-01 224026" src="https://github.com/user-attachments/assets/69feaecd-1656-4bbd-867c-ef66bcce541c" />
 
 ## 👑 The Feature Set (Why it goes so hard)
 
@@ -58,6 +60,7 @@ Stop refreshing Unstop and Devfolio. NEXUS deploys Playwright/Stagehand web agen
 Everything NEXUS ingests is embedded into a blazing fast `voy-search` Vector Database. You can open the side panel and literally ask: *"What did Professor Smith say the deadline was for that database project?"* and the Nanobot will cite the exact email thread. 
 
 ---
+<img width="3199" height="1999" alt="Screenshot 2026-03-01 233919" src="https://github.com/user-attachments/assets/f289dff2-b9aa-4231-9943-c0d6fe8ebd01" />
 
 ## 🏗️ The Gigachad Architecture
 
@@ -153,6 +156,7 @@ We strictly used the most goated, modern frameworks to ensure this thing is blaz
 | **AI Models** | DeepSeek R1 8B, Llama 3.1 & 3.3 | Local privacy + Groq Cloud speed = Unstoppable 🥊 |
 
 ---
+<img width="3199" height="1789" alt="Screenshot 2026-03-01 220101" src="https://github.com/user-attachments/assets/5c751435-b729-45d7-85d0-984021b9ccdf" />
 
 ## 💻 Getting Started (How to boot up the Matrix)
 
@@ -201,12 +205,13 @@ cd frontend
 npm run dev
 ```
 
-Visit `http://localhost:3000`. Welcome to the absolute peak of human productivity. 🚀
+Visit `deployment coming soon...`. Welcome to the absolute peak of human productivity. 🚀
 
----
+-<img width="3199" height="1833" alt="Screenshot 2026-03-01 043142" src="https://github.com/user-attachments/assets/3d1da45a-9380-41da-a5d4-7044ee0d8d0e" />
+--
 
 ## 🤝 Contributing
-Want to add more aura to this repo? Feel free to fork, break things, and submit PRs. Let him cook. 👨‍🍳🔥
+Want to add more aura to this repo? Feel free to fork, break things, and submit PRs. Let it cook. 👨‍🍳🔥
 
 ## 📜 License
 MIT License. Do whatever you want, just don't steal our vibes. ✌️
