@@ -27,6 +27,7 @@ This isn’t just a basic to-do app SaaS wrapper. This is a **Sovereign, Edge-Fi
 
 ---
 <img width="3199" height="1999" alt="Screenshot 2026-03-01 235026" src="https://github.com/user-attachments/assets/7b495acb-64cc-47d7-95a9-5108a7c211c8" />
+<img width="3199" height="1999" alt="image" src="https://github.com/user-attachments/assets/7e4d9001-f2ee-4d80-89a0-0ce3ba97b10c" />
 
 ## ⚡ What is NEXUS? (The TL;DR)
 
